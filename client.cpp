@@ -46,6 +46,7 @@
 
 #include <math.h>
 #include <algorithm>
+#include <sstream>
 #include <arpa/inet.h>
 
 #include "client.h"
@@ -260,8 +261,9 @@ void client::create_arbitrary_request(const arbitrary_command* cmd, struct timev
             //when we have static data mixed with the key placeholder
             if (arg->data.length() != strlen(KEY_PLACEHOLDER)) {
                 std::string str (arg->data);
-                str.replace(str.find(KEY_PLACEHOLDER),strlen(KEY_PLACEHOLDER),key);
-                cmd_size += m_connections[conn_id]->send_arbitrary_command(arg, str.c_str(), str.length() );
+                std::ostringstream key_stream;
+                key_stream << arg->data_prefix << key << arg->data_suffix;
+                cmd_size += m_connections[conn_id]->send_arbitrary_command(arg, key_stream.str().c_str(), key_stream.str().length());
             } else{
                 cmd_size += m_connections[conn_id]->send_arbitrary_command(arg, key, key_len);
             }
