@@ -630,13 +630,20 @@ bool redis_protocol::format_arbitrary_command(arbitrary_command &cmd) {
         current_arg->type = const_type;
 
         // check arg type
-        if (current_arg->data.find(KEY_PLACEHOLDER) != std::string::npos) {
-            if (current_arg->data.length() != strlen(KEY_PLACEHOLDER)) {
-                benchmark_error_log("error: key placeholder can't combined with other data\n");
-                return false;
-            }
-
+        const std::size_t key_placeholder_start = current_arg->data.find(KEY_PLACEHOLDER);
+        if (key_placeholder_start != std::string::npos) {
             current_arg->type = key_type;
+            current_arg->data_prefix = "";
+            current_arg->data_suffix = "";
+            // check for prefix
+            if (key_placeholder_start > 0) {
+                current_arg->data_prefix = current_arg->data.substr(0,key_placeholder_start);
+            }
+            // check for sufix
+            const std::size_t suffix_start = strlen(KEY_PLACEHOLDER)+key_placeholder_start;
+            if (current_arg->data.length() > suffix_start) {
+                current_arg->data_suffix = current_arg->data.substr(suffix_start,current_arg->data.length());
+            }
         } else if (current_arg->data.find(DATA_PLACEHOLDER) != std::string::npos) {
             if (current_arg->data.length() != strlen(DATA_PLACEHOLDER)) {
                 benchmark_error_log("error: data placeholder can't combined with other data\n");
